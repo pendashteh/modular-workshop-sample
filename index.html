@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linux Terminal Workshop</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .workshop-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 480px;
+            overflow: hidden;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            position: relative;
+            z-index: 1;
+        }
+
+        .workshop-info {
+            padding: 25px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .workshop-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #1a1a1a;
+        }
+
+        .workshop-description {
+            color: #6c757d;
+            font-size: 15px;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .progress-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            border-radius: 4px;
+            width: 25%;
+            transition: width 0.3s ease;
+            position: relative;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .progress-text {
+            font-size: 14px;
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        .workshop-image {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .terminal-mockup {
+            width: 280px;
+            height: 160px;
+            background: #1e1e1e;
+            border-radius: 8px;
+            border: 2px solid #333;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transform: perspective(1000px) rotateX(10deg);
+            transition: transform 0.3s ease;
+        }
+
+        .terminal-mockup:hover {
+            transform: perspective(1000px) rotateX(0deg) scale(1.05);
+        }
+
+        .terminal-header {
+            background: #2d2d2d;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            border-radius: 6px 6px 0 0;
+        }
+
+        .terminal-dots {
+            display: flex;
+            gap: 5px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .dot.red { background: #ff5f57; }
+        .dot.yellow { background: #ffbd2e; }
+        .dot.green { background: #28ca42; }
+
+        .terminal-body {
+            flex: 1;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #00ff00;
+            line-height: 1.4;
+        }
+
+        .terminal-line {
+            opacity: 0;
+            animation: typeWriter 0.5s ease-out forwards;
+        }
+
+        .terminal-line:nth-child(1) { animation-delay: 0.5s; }
+        .terminal-line:nth-child(2) { animation-delay: 1s; }
+        .terminal-line:nth-child(3) { animation-delay: 1.5s; }
+
+        @keyframes typeWriter {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 14px;
+            background: #00ff00;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        .module-sections {
+            padding: 20px;
+        }
+
+        .section {
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            padding: 20px;
+            border: 1px solid #e9ecef;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.1), transparent);
+            transition: left 0.3s ease;
+        }
+
+        .section:hover::before {
+            left: 100%;
+        }
+
+        .section:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            border-color: #667eea;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+
+        .section-badge {
+            background: #667eea;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .section-badge.video { background: #e74c3c; }
+        .section-badge.hands-on { background: #28a745; }
+        .section-badge.quiz { background: #ffc107; color: #1a1a1a; }
+
+        .section-description {
+            color: #6c757d;
+            font-size: 14px;
+            line-height: 1.4;
+            position: relative;
+            z-index: 1;
+        }
+
+        .section-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+
+        .section-content {
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .section-text {
+            flex: 1;
+        }
+
+        .icon-terminal { background: #1a1a1a; color: white; }
+        .icon-video { background: #e74c3c; color: white; }
+        .icon-lab { background: #28a745; color: white; }
+        .icon-quiz { background: #ffc107; color: #1a1a1a; }
+
+        .start-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .start-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.3s ease, height 0.3s ease;
+        }
+
+        .start-button:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .start-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .start-button span {
+            position: relative;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="workshop-container">
+        <div class="header">
+            <h1>TechMaster Academy</h1>
+        </div>
+
+        <div class="workshop-info">
+            <div class="workshop-title">Linux Terminal Fundamentals</div>
+            <div class="workshop-description">
+                Master the command line interface and essential Linux commands through hands-on practice and real-world scenarios.
+            </div>
+            <div class="progress-info">
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+                <div class="progress-text">1/4 modules</div>
+            </div>
+        </div>
+
+        <div class="workshop-image">
+            <div class="terminal-mockup">
+                <div class="terminal-header">
+                    <div class="terminal-dots">
+                        <div class="dot red"></div>
+                        <div class="dot yellow"></div>
+                        <div class="dot green"></div>
+                    </div>
+                </div>
+                <div class="terminal-body">
+                    <div class="terminal-line">$ ls -la</div>
+                    <div class="terminal-line">$ cd /home/user</div>
+                    <div class="terminal-line">$ pwd<span class="cursor"></span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="module-sections">
+            <div class="section">
+                <div class="section-content">
+                    <div class="section-icon icon-video">▶</div>
+                    <div class="section-text">
+                        <div class="section-header">
+                            <div class="section-title">Introduction to Terminal</div>
+                            <div class="section-badge video">Video</div>
+                        </div>
+                        <div class="section-description">
+                            Learn what the terminal is, why it's powerful, and how to open it on different systems.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-content">
+                    <div class="section-icon icon-lab">⚡</div>
+                    <div class="section-text">
+                        <div class="section-header">
+                            <div class="section-title">Navigation Commands</div>
+                            <div class="section-badge hands-on">Hands-on</div>
+                        </div>
+                        <div class="section-description">
+                            Practice using ls, cd, pwd, and other navigation commands in our interactive terminal.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-content">
+                    <div class="section-icon icon-terminal">$</div>
+                    <div class="section-text">
+                        <div class="section-header">
+                            <div class="section-title">File Operations</div>
+                            <div class="section-badge hands-on">Hands-on</div>
+                        </div>
+                        <div class="section-description">
+                            Master file creation, copying, moving, and deletion with cp, mv, rm, and mkdir commands.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-content">
+                    <div class="section-icon icon-quiz">?</div>
+                    <div class="section-text">
+                        <div class="section-header">
+                            <div class="section-title">Module Assessment</div>
+                            <div class="section-badge quiz">Quiz</div>
+                        </div>
+                        <div class="section-description">
+                            Test your knowledge with practical scenarios and earn your certification.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button class="start-button">
+                <span>Start Learning</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Add interactive behaviors
+        document.querySelectorAll('.section').forEach(section => {
+            section.addEventListener('click', function() {
+                const title = this.querySelector('.section-title').textContent;
+                const badge = this.querySelector('.section-badge').textContent;
+                
+                // Simulate navigation to different module types
+                if (badge === 'Video') {
+                    console.log(`Opening video module: ${title}`);
+                } else if (badge === 'Hands-on') {
+                    console.log(`Opening interactive terminal for: ${title}`);
+                } else if (badge === 'Quiz') {
+                    console.log(`Opening assessment: ${title}`);
+                }
+                
+                // Add visual feedback
+                this.style.transform = 'scale(0.98)';
+                setTimeout(() => {
+                    this.style.transform = 'translateY(-2px)';
+                }, 100);
+            });
+        });
+
+        // Start button interaction
+        document.querySelector('.start-button').addEventListener('click', function() {
+            console.log('Starting workshop...');
+            // Update progress
+            const progressFill = document.querySelector('.progress-fill');
+            progressFill.style.width = '50%';
+            
+            // Button feedback
+            this.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                this.style.transform = 'translateY(-2px)';
+            }, 150);
+        });
+
+        // Simulate progress updates
+        setTimeout(() => {
+            const progressText = document.querySelector('.progress-text');
+            progressText.textContent = '2/4 modules';
+        }, 3000);
+    </script>
+</body>
+</html>
